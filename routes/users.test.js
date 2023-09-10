@@ -287,4 +287,6 @@ describe("DELETE /users/:username", function () {
         .set("authorization", `Bearer ${u1Token}`);
     expect(resp.statusCode).toEqual(404);
   });
+
+  
 });
