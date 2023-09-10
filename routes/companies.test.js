@@ -95,6 +95,7 @@ describe("GET /companies", function () {
           ],
     });
   });
+  
 
   test("fails: test next() handler", async function () {
     // there's no normal failure event which will cause this route to fail ---
