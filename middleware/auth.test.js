@@ -10,6 +10,7 @@ const {
 
 const { SECRET_KEY } = require("../config");
 const testJwt = jwt.sign({ username: "test", isAdmin: false }, SECRET_KEY);
+const adminJwt = jwt.sign({ username: "testAdmin", isAdmin: true}, SECRET_KEY);
 const badJwt = jwt.sign({ username: "test", isAdmin: false }, "wrong");
 
 
@@ -32,6 +33,22 @@ describe("authenticateJWT", function () {
       },
     });
   });
+  test("works: admin", function () {
+    expect.assertions(2);
+    const req = { headers: { authorization: `Bearer ${adminJwt}` } };
+    const res = { locals: {} };
+    const next = function (err) {
+      expect(err).toBeFalsy();
+    };
+    authenticateJWT(req, res, next);
+    expect(res.locals).toEqual({
+      user: {
+        iat: expect.any(Number),
+        username: "testAdmin",
+        isAdmin: true,
+      },
+    });
+  })
 
   test("works: no header", function () {
     expect.assertions(2);
@@ -61,7 +78,7 @@ describe("ensureLoggedIn", function () {
   test("works", function () {
     expect.assertions(1);
     const req = {};
-    const res = { locals: { user: { username: "test", is_admin: false } } };
+    const res = { locals: { user: { username: "testAdmin", is_admin: false } } };
     const next = function (err) {
       expect(err).toBeFalsy();
     };
@@ -77,4 +94,5 @@ describe("ensureLoggedIn", function () {
     };
     ensureLoggedIn(req, res, next);
   });
+  
 });

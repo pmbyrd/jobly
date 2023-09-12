@@ -13,6 +13,7 @@ const {
   commonAfterAll,
   u1Token,
 } = require("./_testCommon");
+const { describe } = require("node:test");
 
 beforeAll(commonBeforeAll);
 beforeEach(commonBeforeEach);
@@ -161,6 +162,9 @@ describe("GET /users", function () {
     expect(resp.statusCode).toEqual(500);
   });
 });
+
+// make a test to register/create a user
+
 
 /************************************** GET /users/:username */
 
