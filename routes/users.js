@@ -14,7 +14,6 @@ const userUpdateSchema = require("../schemas/userUpdate.json");
 
 const router = express.Router();
 
-
 /** POST / { user }  => { user, token }
  *
  * Adds a new user. This is not the registration endpoint --- instead, this is
@@ -28,21 +27,20 @@ const router = express.Router();
  **/
 
 router.post("/", ensureLoggedIn, async function (req, res, next) {
-  try {
-    const validator = jsonschema.validate(req.body, userNewSchema);
-    if (!validator.valid) {
-      const errs = validator.errors.map(e => e.stack);
-      throw new BadRequestError(errs);
-    }
+	try {
+		const validator = jsonschema.validate(req.body, userNewSchema);
+		if (!validator.valid) {
+			const errs = validator.errors.map((e) => e.stack);
+			throw new BadRequestError(errs);
+		}
 
-    const user = await User.register(req.body);
-    const token = createToken(user);
-    return res.status(201).json({ user, token });
-  } catch (err) {
-    return next(err);
-  }
+		const user = await User.register(req.body);
+		const token = createToken(user);
+		return res.status(201).json({ user, token });
+	} catch (err) {
+		return next(err);
+	}
 });
-
 
 /** GET / => { users: [ {username, firstName, lastName, email }, ... ] }
  *
@@ -51,15 +49,15 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
  * Authorization required: login
  **/
 
-router.get("/", ensureLoggedIn, async function (req, res, next) {
-  try {
-    const users = await User.findAll();
-    return res.json({ users });
-  } catch (err) {
-    return next(err);
-  }
+// NOTE changed ensureLoggedIn to ensureAdmin
+router.get("/", ensureAdmin, async function (req, res, next) {
+	try {
+		const users = await User.findAll();
+		return res.json({ users });
+	} catch (err) {
+		return next(err);
+	}
 });
-
 
 /** GET /[username] => { user }
  *
@@ -69,14 +67,19 @@ router.get("/", ensureLoggedIn, async function (req, res, next) {
  **/
 
 router.get("/:username", ensureLoggedIn, async function (req, res, next) {
-  try {
-    const user = await User.get(req.params.username);
-    return res.json({ user });
-  } catch (err) {
-    return next(err);
-  }
+	try {
+		const user = await User.get(req.params.username);
+		console.log("res.locals.user", res.locals.user);
+		// Check if the user is the current user or an admin
+		if (user.username === res.locals.user.username || res.locals.user.isAdmin) {
+			return res.json({ user });
+		} else {
+			throw new BadRequestError("Unauthorized access");
+		}
+	} catch (err) {
+		return next(err);
+	}
 });
-
 
 /** PATCH /[username] { user } => { user }
  *
@@ -89,34 +92,42 @@ router.get("/:username", ensureLoggedIn, async function (req, res, next) {
  **/
 
 router.patch("/:username", ensureLoggedIn, async function (req, res, next) {
-  try {
-    const validator = jsonschema.validate(req.body, userUpdateSchema);
-    if (!validator.valid) {
-      const errs = validator.errors.map(e => e.stack);
-      throw new BadRequestError(errs);
-    }
+	try {
+		const validator = jsonschema.validate(req.body, userUpdateSchema);
+		if (!validator.valid) {
+			const errs = validator.errors.map((e) => e.stack);
+			throw new BadRequestError(errs);
+		}
 
-    const user = await User.update(req.params.username, req.body);
-    return res.json({ user });
-  } catch (err) {
-    return next(err);
-  }
+		const user = await User.update(req.params.username, req.body);
+		// if not user or not admin, throw error
+		if (!user || !res.locals.user.isAdmin) {
+			throw new BadRequestError();
+		}
+		return res.json({ user });
+	} catch (err) {
+		return next(err);
+	}
 });
-
 
 /** DELETE /[username]  =>  { deleted: username }
  *
  * Authorization required: login
+ *
+ * NOTE should only be able to delete self or if admin
  **/
 
 router.delete("/:username", ensureLoggedIn, async function (req, res, next) {
-  try {
-    await User.remove(req.params.username);
-    return res.json({ deleted: req.params.username });
-  } catch (err) {
-    return next(err);
-  }
+	try {
+		// if not user or not admin, throw error
+		if (!res.user || !res.locals.user.isAdmin) {
+			throw new BadRequestError();
+		}
+		await User.remove(req.params.username);
+		return res.json({ deleted: req.params.username });
+	} catch (err) {
+		return next(err);
+	}
 });
-
 
 module.exports = router;

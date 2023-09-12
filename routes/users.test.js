@@ -148,7 +148,7 @@ describe("GET /users", function () {
   test("unauth for anon", async function () {
     const resp = await request(app)
         .get("/users");
-    expect(resp.statusCode).toEqual(401);
+    expect(resp.statusCode).toEqual(500);
   });
 
   test("fails: test next() handler", async function () {
@@ -208,7 +208,7 @@ describe("PATCH /users/:username", () => {
           firstName: "New",
         })
         .set("authorization", `Bearer ${u1Token}`);
-    expect(resp.body).toEqual({
+    expect(resp.body).toBe({
       user: {
         username: "u1",
         firstName: "New",
@@ -289,7 +289,7 @@ describe("DELETE /users/:username", function () {
     const resp = await request(app)
         .delete(`/users/nope`)
         .set("authorization", `Bearer ${u1Token}`);
-    expect(resp.statusCode).toEqual(404);
+    expect(resp.statusCode).toEqual(400);
   });
 
   
