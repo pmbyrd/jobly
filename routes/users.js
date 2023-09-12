@@ -100,11 +100,12 @@ router.patch("/:username", ensureLoggedIn, async function (req, res, next) {
 		}
 
 		const user = await User.update(req.params.username, req.body);
-		// if not user or not admin, throw error
-		if (!user || !res.locals.user.isAdmin) {
-			throw new BadRequestError();
-		}
-		return res.json({ user });
+		if (user.username === res.locals.user.username || res.locals.user.isAdmin) {
+      return res.json({ user });
+    } else {
+      throw new BadRequestError("Unauthorized access");
+    }
+
 	} catch (err) {
 		return next(err);
 	}
@@ -121,10 +122,11 @@ router.delete("/:username", ensureLoggedIn, async function (req, res, next) {
 	try {
 		// if not user or not admin, throw error
 		if (!res.user || !res.locals.user.isAdmin) {
-			throw new BadRequestError();
-		}
-		await User.remove(req.params.username);
-		return res.json({ deleted: req.params.username });
+      await User.remove(req.params.username);
+      return res.json({ deleted: req.params.username });
+    } else {
+      throw new BadRequestError("Unauthorized access");
+    }
 	} catch (err) {
 		return next(err);
 	}

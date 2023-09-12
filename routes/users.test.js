@@ -208,7 +208,7 @@ describe("PATCH /users/:username", () => {
           firstName: "New",
         })
         .set("authorization", `Bearer ${u1Token}`);
-    expect(resp.body).toBe({
+    expect(resp.body).toEqual({
       user: {
         username: "u1",
         firstName: "New",
@@ -289,7 +289,7 @@ describe("DELETE /users/:username", function () {
     const resp = await request(app)
         .delete(`/users/nope`)
         .set("authorization", `Bearer ${u1Token}`);
-    expect(resp.statusCode).toEqual(400);
+    expect(resp.statusCode).toEqual(404);
   });
 
   
