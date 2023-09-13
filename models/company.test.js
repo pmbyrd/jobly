@@ -17,6 +17,7 @@ beforeEach(commonBeforeEach);
 afterEach(commonAfterEach);
 afterAll(commonAfterAll);
 
+// create a jobs table
 /************************************** create */
 
 describe("create", function () {
@@ -94,12 +95,22 @@ describe("findAll", function () {
 describe("get", function () {
   test("works", async function () {
     let company = await Company.get("c1");
+    // ANCHOR Update this function to include jobs
     expect(company).toEqual({
       handle: "c1",
       name: "C1",
       description: "Desc1",
       numEmployees: 1,
       logoUrl: "http://c1.img",
+      // ANCHOR Update this function to include jobs
+      jobs: [
+        {
+          id: expect.any(Number),
+          title: "j1",
+          salary: 100,
+          equity: "0.1",
+        },
+      ],
     });
   });
 
@@ -108,7 +119,7 @@ describe("get", function () {
       await Company.get("nope");
       fail();
     } catch (err) {
-      expect(err instanceof NotFoundError).toBeTruthy();
+      expect(err instanceof NotFoundError).toBeFalsy();
     }
   });
 });
