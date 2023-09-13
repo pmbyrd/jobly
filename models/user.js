@@ -10,7 +10,6 @@ const {
 } = require("../expressError");
 
 const { BCRYPT_WORK_FACTOR } = require("../config.js");
-
 /** Related functions for users. */
 
 class User {
@@ -214,23 +213,36 @@ class User {
    * Throws BadRequestError if user already applied for this job.
    * */
 
-  static async apply(username, jobId) {
-    const results= await db.query(
-      `SELECT username, job_id AS "jobId"
-      FROM applications
-      WHERE username = $1 AND job_id = $2`,
-      [username, jobId]
-    )
+
+  static async apply({username, jobId}) {
+    console.log("jobId", jobId);
+  //  I am using to constraints from two different tables, they need to be validated or else I will get an error
+  const userCheck = await db.query(
+    `SELECT username
+     FROM users
+     WHERE username = $1`,
+     [username],
+  );
+  if (!userCheck.rows[0]) throw new NotFoundError(`No user: ${username}`);
+
+  const jobCheck = await db.query(
+    `SELECT id
+     FROM jobs
+     WHERE id = $1`,
+     [jobId],
+  );
+  if (!jobCheck.rows[0]) throw new NotFoundError(`No job: ${jobId}`);
+
+  // if valid, insert into applications table
+  const result = await db.query(
+    `INSERT INTO applications (username, job_id)
+      VALUES ($1, $2)
+      RETURNING username, job_id AS "jobId"`,
+      [username, jobId],
+  );
+  const application = result.rows[0];
+  return application;
   }
-
-  /** Get all jobs applied for by user
-   * 
-   * Returns [{ id, title, salary, equity, company_handle, company_name, state }, ...]
-   * 
-   * Throws NotFoundError if user not found.
-   * 
-   * */
-
 }
 
 

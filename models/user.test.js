@@ -230,9 +230,37 @@ describe("remove", function () {
 });
 
 describe("apply", function () {
+  // get a dummy job id
+  let jobId;
+  beforeEach(async function () {
+    const job = await db.query(
+        `INSERT INTO jobs (title, salary, equity, company_handle)
+          VALUES ('test', 100, 0.1, 'c1')
+          RETURNING id`);
+    jobId = job.rows[0].id;
+  });
+  
   test("works", async function () {
     await User.apply("u1", 1);
-   console.log("test");
+    const res = await db.query(
+        "SELECT * FROM applications WHERE username='u1'");
+    expect(res.rows.length).toEqual(1);
+  });
 
+  test("not found if no such user", async function () {
+    try {
+      await User.apply("nope", 1);
+      fail();
+    } catch (err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  });
+  test("not found if no such job", async function () {
+    try {
+      await User.apply("u1", 0);
+      fail();
+    } catch (err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
   });
 });
