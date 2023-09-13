@@ -28,6 +28,16 @@ class Job {
 		);
 		if (duplicateCheck.rows[0])
 			throw new BadRequestError(`Duplicate job: ${title}`);
+		// if the companyHandle is not in the companies table, throw an error
+		const companyCheck = await db.query(
+			`SELECT handle
+			FROM companies
+			WHERE handle = $1`,
+			[companyHandle]
+		);
+		if (!companyCheck.rows[0])
+			throw new BadRequestError(`Company does not exist: ${companyHandle}`);
+
 		const result = await db.query(
 			`INSERT INTO jobs
             (title, salary, equity, company_handle)
@@ -138,7 +148,7 @@ class Job {
 	 * Throws BadRequestError if no matching jobs found.
 	 * */
 
-	static async filter({title, minSalary, hasEquity}) {
+	static async filter({ title, minSalary, hasEquity }) {
 		let query = `SELECT id,
                 title,
                 salary,
@@ -146,29 +156,29 @@ class Job {
                 company_handle AS "companyHandle"
                 FROM jobs
                 WHERE 1=1`;
-        let queryValues = [];
-        if (title !== undefined) {
-            query += ` AND title ILIKE $${queryValues.length + 1}`;
-            queryValues.push(`%${title}%`);
-        }
-        if (minSalary !== undefined) {
-            query += ` AND salary >= $${queryValues.length + 1}`;
-            queryValues.push(minSalary);
-        }
-        if (hasEquity === true) {
-            query += ` AND equity > 0`;
-            queryValues.push(hasEquity);
-        }
-        const jobsRes = await db.query(query, queryValues);
-        // error handling
-        if (jobsRes.rows.length === 0) {
-            throw new BadRequestError(`No jobs found`);
-        }
-        if (!jobsRes) throw new NotFoundError(`No jobs found`);
-        if(minSalary > jobsRes.rows.salary) {
-            throw new BadRequestError(`No jobs found meeting minimum salary`);
-        }
-        return jobsRes.rows;
-    }
+		let queryValues = [];
+		if (title !== undefined) {
+			query += ` AND title ILIKE $${queryValues.length + 1}`;
+			queryValues.push(`%${title}%`);
+		}
+		if (minSalary !== undefined) {
+			query += ` AND salary >= $${queryValues.length + 1}`;
+			queryValues.push(minSalary);
+		}
+		if (hasEquity === true) {
+			query += ` AND equity > 0`;
+			queryValues.push(hasEquity);
+		}
+		const jobsRes = await db.query(query, queryValues);
+		// error handling
+		if (jobsRes.rows.length === 0) {
+			throw new BadRequestError(`No jobs found`);
+		}
+		if (!jobsRes) throw new NotFoundError(`No jobs found`);
+		if (minSalary > jobsRes.rows.salary) {
+			throw new BadRequestError(`No jobs found meeting minimum salary`);
+		}
+		return jobsRes.rows;
+	}
 }
 module.exports = Job;

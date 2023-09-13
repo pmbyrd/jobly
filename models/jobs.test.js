@@ -47,6 +47,19 @@ describe("create", function () {
 			expect(err instanceof BadRequestError).toBeTruthy();
 		}
 	});
+	test("bad request with no company", async function () {
+		try {
+			await Job.create({
+				title: "test2",
+				salary: 200,
+				equity: 0.2,
+				companyHandle: "notacompany",
+			});
+			fail();
+		} catch (err) {
+			expect(err instanceof BadRequestError).toBeTruthy();
+		}
+	});
 });
 
 /************************************** findAll */
