@@ -64,21 +64,41 @@ class Company {
 	 *   where jobs is [{ id, title, salary, equity, companyHandle }, ...]
 	 *
 	 * Throws NotFoundError if not found.
+	 *
+	 * ANCHOR Update this function to include jobs
 	 **/
 
 	static async get(handle) {
-		const companyRes = await db.query(
+
+		const result = await db.query(
 			`SELECT handle,
                   name,
                   description,
                   num_employees AS "numEmployees",
-                  logo_url AS "logoUrl"
+                  logo_url AS "logoUrl", 
+				  id, 
+				  title,
+				  salary,
+				  equity,
+				  company_handle AS "companyHandle"
            FROM companies
-           WHERE handle = $1`,
+		   JOIN jobs ON companies.handle = jobs.company_handle
+           WHERE handle = $1
+		   ORDER BY name`,
 			[handle]
 		);
 
-		const company = companyRes.rows[0];
+		let jobs = result.rows.map((r) => ({
+			id: r.id,
+			title: r.title,
+			salary: r.salary,
+			equity: r.equity,
+		}));
+		// const company = companyRes.rows[0];
+		// reformat the company object
+		let {name, description, numEmployees, logoUrl } = result.rows[0];
+
+		let company = { handle, name, description, numEmployees, logoUrl, jobs }; //modify this to include jobs
 
 		if (!company) throw new NotFoundError(`No company: ${handle}`);
 
@@ -155,9 +175,9 @@ class Company {
 	 * @param {number} filters.maxEmployees - The maximum number of employees.
 	 * @returns {Array} - An array of filtered companies.
 	 */
-  static async filter({ name, minEmployees, maxEmployees }) {
-    // Make the query generic, so that way we can add more filters later
-    let query = `
+	static async filter({ name, minEmployees, maxEmployees }) {
+		// Make the query generic, so that way we can add more filters later
+		let query = `
       SELECT handle,
              name,
              description,
@@ -165,52 +185,55 @@ class Company {
              logo_url AS "logoUrl"
       FROM companies
       WHERE 1 = 1`;
-  
-    let queryValues = [];
-  
-    // If there are any filters, we need to add a WHERE clause to the query
-    if (name !== undefined) {
-      query += ` AND name ILIKE $${queryValues.length + 1}`;
-      queryValues.push(`%${name}%`);
-    }
-  
-    if (minEmployees !== undefined) {
-      query += ` AND num_employees >= $${queryValues.length + 1}`;
-      queryValues.push(parseInt(minEmployees));
-    }
-  
-    if (maxEmployees !== undefined) {
-      query += ` AND num_employees <= $${queryValues.length + 1}`;
-      queryValues.push(parseInt(maxEmployees));
-    }
-  
-    if (minEmployees !== undefined && maxEmployees !== undefined && minEmployees > maxEmployees) {
-      throw new BadRequestError(
-        `Min employees cannot be greater than max employees`
-      );
-    }
-  
-    const companiesRes = await db.query(query, queryValues);
-  
-    if (companiesRes.rows.length === 0) {
-      if (minEmployees > maxEmployees) {
-        throw new BadRequestError(
-          `Min employees cannot be greater than max employees`
-        );
-      }
-      if (minEmployees) {
-        throw new NotFoundError(
-          `No companies found with less than ${minEmployees} employees`
-          );
-        }
-        if (name) {
-          throw new NotFoundError(`No companies found with name: ${name}`);
-        }
-    }
-  
-    return companiesRes.rows;
-  }
+
+		let queryValues = [];
+
+		// If there are any filters, we need to add a WHERE clause to the query
+		if (name !== undefined) {
+			query += ` AND name ILIKE $${queryValues.length + 1}`;
+			queryValues.push(`%${name}%`);
+		}
+
+		if (minEmployees !== undefined) {
+			query += ` AND num_employees >= $${queryValues.length + 1}`;
+			queryValues.push(parseInt(minEmployees));
+		}
+
+		if (maxEmployees !== undefined) {
+			query += ` AND num_employees <= $${queryValues.length + 1}`;
+			queryValues.push(parseInt(maxEmployees));
+		}
+
+		if (
+			minEmployees !== undefined &&
+			maxEmployees !== undefined &&
+			minEmployees > maxEmployees
+		) {
+			throw new BadRequestError(
+				`Min employees cannot be greater than max employees`
+			);
+		}
+
+		const companiesRes = await db.query(query, queryValues);
+
+		if (companiesRes.rows.length === 0) {
+			if (minEmployees > maxEmployees) {
+				throw new BadRequestError(
+					`Min employees cannot be greater than max employees`
+				);
+			}
+			if (minEmployees) {
+				throw new NotFoundError(
+					`No companies found with less than ${minEmployees} employees`
+				);
+			}
+			if (name) {
+				throw new NotFoundError(`No companies found with name: ${name}`);
+			}
+		}
+
+		return companiesRes.rows;
+	}
 }
-  
 
 module.exports = Company;
