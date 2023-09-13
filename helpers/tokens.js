@@ -15,4 +15,6 @@ function createToken(user) {
   return jwt.sign(payload, SECRET_KEY);
 }
 
+
+
 module.exports = { createToken };

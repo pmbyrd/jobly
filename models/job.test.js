@@ -1,8 +1,8 @@
 "use strict";
 
 const db = require("../db.js");
-const { BadRequestError, NotFoundError } = require("../expressError");
-const Job = require("./jobs.js");
+const { BadRequestError, NotFoundError } = require("../expressError.js");
+const Job = require("./job.js");
 // import the common functions from _testCommon
 beforeEach(async function () {
 	await db.query("DELETE FROM jobs");
