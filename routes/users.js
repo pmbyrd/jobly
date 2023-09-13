@@ -101,11 +101,10 @@ router.patch("/:username", ensureLoggedIn, async function (req, res, next) {
 
 		const user = await User.update(req.params.username, req.body);
 		if (user.username === res.locals.user.username || res.locals.user.isAdmin) {
-      return res.json({ user });
-    } else {
-      throw new BadRequestError("Unauthorized access");
-    }
-
+			return res.json({ user });
+		} else {
+			throw new BadRequestError("Unauthorized access");
+		}
 	} catch (err) {
 		return next(err);
 	}
@@ -122,14 +121,37 @@ router.delete("/:username", ensureLoggedIn, async function (req, res, next) {
 	try {
 		// if not user or not admin, throw error
 		if (!res.user || !res.locals.user.isAdmin) {
-      await User.remove(req.params.username);
-      return res.json({ deleted: req.params.username });
-    } else {
-      throw new BadRequestError("Unauthorized access");
-    }
+			await User.remove(req.params.username);
+			return res.json({ deleted: req.params.username });
+		} else {
+			throw new BadRequestError("Unauthorized access");
+		}
 	} catch (err) {
 		return next(err);
 	}
 });
+
+// TODO: add a route to apply for a job
+/**
+ * Apply for job: update db, returns undefined.
+ *
+ * - username: username of user applying for job
+ * - jobId: id of job
+ *
+ */
+router.post(
+	"/:username/jobs/:id",
+	ensureLoggedIn,
+	async function (req, res, next) {
+		try {
+			if (!res.user || !res.locals.user.isAdmin) {
+				await User.apply(req.params.username, req.params.id);
+				return res.json({ applied: req.params.id });
+			}
+		} catch (err) {
+			return next(err);
+		}
+	}
+);
 
 module.exports = router;
