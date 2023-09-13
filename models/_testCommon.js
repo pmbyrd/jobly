@@ -10,6 +10,7 @@ async function commonBeforeAll() {
 	await db.query("DELETE FROM users");
   // ANCHOR Update this function to include jobs
   await db.query("DELETE FROM jobs");
+  
 
 	await db.query(`
     INSERT INTO companies(handle, name, num_employees, description, logo_url)

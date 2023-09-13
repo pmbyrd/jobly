@@ -228,3 +228,11 @@ describe("remove", function () {
     }
   });
 });
+
+describe("apply", function () {
+  test("works", async function () {
+    await User.apply("u1", 1);
+   console.log("test");
+
+  });
+});

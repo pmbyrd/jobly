@@ -204,6 +204,33 @@ class User {
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
   }
+
+  /** Apply for job: update db, returns undefined.
+   *  
+   * - username: username of user applying for job
+   * - jobId: id of job
+   *  
+   * Throws NotFoundError if user or job not found.
+   * Throws BadRequestError if user already applied for this job.
+   * */
+
+  static async apply(username, jobId) {
+    const results= await db.query(
+      `SELECT username, job_id AS "jobId"
+      FROM applications
+      WHERE username = $1 AND job_id = $2`,
+      [username, jobId]
+    )
+  }
+
+  /** Get all jobs applied for by user
+   * 
+   * Returns [{ id, title, salary, equity, company_handle, company_name, state }, ...]
+   * 
+   * Throws NotFoundError if user not found.
+   * 
+   * */
+
 }
 
 
