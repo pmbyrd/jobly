@@ -106,7 +106,7 @@ router.delete("/:id", ensureAdmin, async function (req, res, next) {
 		if (!res.locals.user.isAdmin) {
 			throw new BadRequestError("Only admins can delete jobs");
 		}
-		await Job.remove(req.params.id);
+		await Job.delete(req.params.id);
 		return res.json({ deleted: req.params.id });
 	} catch (error) {
 		return next(error);
