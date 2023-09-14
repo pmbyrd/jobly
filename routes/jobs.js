@@ -71,4 +71,49 @@ router.get("/:id", async function (req, res, next) {
 	}
 });
 
+/** PATCH /[id] { fld1, fld2, ... } => { job }
+ *
+ * Patches job data.
+ *
+ * fields can be: { title, salary, equity }
+ *
+ * Returns { id, title, salary, equity, companyHandle }
+ *
+ * Authorization required: login
+ * */
+
+router.patch("/:id", ensureAdmin, async function (req, res, next) {
+	try {
+		const validator = jsonschema.validate(req.body, jobUpdateSchema);
+		if (!validator.valid) {
+			const errs = validator.errors.map((e) => e.stack);
+			throw new BadRequestError(errs);
+		}
+		// if the user is not an admin, throw an error
+		if (!res.locals.user.isAdmin) {
+			throw new BadRequestError("Only admins can update jobs");
+		}
+		const job = await Job.update(req.params.id, req.body);
+		return res.json({ job });
+	} catch (error) {
+		return next(error);
+	}
+});
+
+router.delete("/:id", ensureAdmin, async function (req, res, next) {
+	try {
+		// if the user is not an admin, throw an error
+		if (!res.locals.user.isAdmin) {
+			throw new BadRequestError("Only admins can delete jobs");
+		}
+		await Job.remove(req.params.id);
+		return res.json({ deleted: req.params.id });
+	} catch (error) {
+		return next(error);
+	}
+});
+
+
+
+
 module.exports = router;
