@@ -89,6 +89,19 @@ class Job {
 		);
 		const job = jobRes.rows[0];
 		if (!job) throw new NotFoundError(`No job: ${id}`);
+
+		const companyRes = await db.query(
+			`SELECT handle,
+					name,
+					description,
+					num_employees AS "numEmployees",
+					logo_url AS "logoUrl"
+			FROM companies
+			WHERE handle = $1`,
+			[job.companyHandle]
+		);
+		delete job.companyHandle;  //if not removed data will be duplicated
+		job.company = companyRes.rows[0];
 		return job;
 	}
 

@@ -95,7 +95,13 @@ describe("get", function () {
 			title: "test",
 			salary: 100,
 			equity: "0.1",
-			companyHandle: "c1",
+			company: {
+				description: "Desc1",
+				handle: "c1",
+				logoUrl: "http://c1.img",
+				name: "C1",
+				numEmployees: 1,
+			}
 		});
 	});
 	test("fails with no job", async function () {
