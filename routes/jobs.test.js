@@ -136,3 +136,42 @@ describe("GET /jobs/:id", function () {
         expect(resp.statusCode).toEqual(404);
     });
 });
+
+describe("PATCH /jobs/:id", function () {
+    test("admin can patch job", async function () {
+        const resp = await request(app)
+            .patch(`/jobs/${testJobIds[0].id}`)
+            .send({
+                title: "j1-new",
+            })
+            .set("authorization", `Bearer ${adminToken}`);
+        expect(resp.body).toEqual({
+            job: {
+                id: testJobIds[0].id,
+                title: "j1-new",
+                salary: 100,
+                equity: "0.1",
+                companyHandle: "c1",
+            },
+        });
+    });
+    test("non-admin cannot patch job", async function () {
+        const resp = await request(app)
+            .patch(`/jobs/${testJobIds[0].id}`)
+            .send({
+                title: "j1-new",
+            })
+            .set("authorization", `Bearer ${u1Token}`);
+        expect(resp.statusCode).toEqual(400);
+    });
+});
+
+describe("DELETE /jobs/:id", function () {
+    test("admin can delete job", async function () {
+        const resp = await request(app)
+            .delete(`/jobs/${testJobIds[0].id}`)
+            .set("authorization", `Bearer ${adminToken}`);
+        expect(resp.body).toEqual({ deleted: testJobIds[0].id });
+
+    });
+});

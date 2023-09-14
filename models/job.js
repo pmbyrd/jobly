@@ -193,5 +193,27 @@ class Job {
 		}
 		return jobsRes.rows;
 	}
+
+	/**SECTION
+	 * 
+	 * Given a job id, delete job.
+	 * 	
+	 * Returns { deleted: id }
+	 * 	
+	 * Throws NotFoundError if job not found.
+	 * */
+	static async delete(id) {
+		const result = await db.query(
+			`DELETE
+			FROM jobs
+			WHERE id = $1
+			RETURNING id`,
+			[id]
+		);
+		const job = result.rows[0];
+		if (!job) throw new NotFoundError(`No job: ${id}`);
+		return { deleted: id };
+	}
+
 }
 module.exports = Job;
