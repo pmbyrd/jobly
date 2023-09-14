@@ -141,12 +141,13 @@ router.delete("/:username", ensureLoggedIn, async function (req, res, next) {
  */
 router.post(
 	"/:username/jobs/:id",
-	ensureLoggedIn,
+	// ensureLoggedIn,
 	async function (req, res, next) {
 		try {
+			const jobId = req.params.id;
 			if (!res.user || !res.locals.user.isAdmin) {
-				await User.apply(req.params.username, req.params.id);
-				return res.json({ applied: req.params.id });
+				await User.apply(req.params.username, jobId);
+				return res.json({ applied: jobId });
 			}
 		} catch (err) {
 			return next(err);

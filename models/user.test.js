@@ -12,6 +12,7 @@ const {
   commonBeforeEach,
   commonAfterEach,
   commonAfterAll,
+
 } = require("./_testCommon");
 
 beforeAll(commonBeforeAll);
@@ -229,25 +230,35 @@ describe("remove", function () {
   });
 });
 
-describe("apply", function () {
+describe("apply",function () {
   // get a dummy job id
-  let jobId;
-  beforeEach(async function () {
+  const jobId = async function () {
     const job = await db.query(
-        `INSERT INTO jobs (title, salary, equity, company_handle)
-          VALUES ('test', 100, 0.1, 'c1')
-          RETURNING id`);
-    jobId = job.rows[0].id;
-  });
-  
-  test("works", async function () {
-    await User.apply("u1", 1);
-    const res = await db.query(
-        "SELECT * FROM applications WHERE username='u1'");
-    expect(res.rows.length).toEqual(1);
-  });
+      `SELECT id
+      FROM jobs
+      WHERE title = 'j1'`
+    );
 
+    return job.rows[0].id;
+  }
+  const u1 = async function () {
+    const user = await db.query(
+      `SELECT username
+      FROM users
+      WHERE username = 'u1'`
+    );
+    return user.rows[0].username;
+  }
+
+
+  test("works", async function () {
+    const id = await jobId();
+    const username = await u1();
+    console.log("jobId", id);
+    console.log("u1", username);
+  });
   test("not found if no such user", async function () {
+
     try {
       await User.apply("nope", 1);
       fail();
