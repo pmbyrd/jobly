@@ -215,5 +215,38 @@ class Job {
 		return { deleted: id };
 	}
 
+	static async filter({ title, minSalary, hasEquity }) {
+		let query = `SELECT id,
+				title,
+				salary,
+				equity,
+				company_handle AS "companyHandle"
+				FROM jobs
+				WHERE 1=1`;
+		let queryValues = [];
+		if (title !== undefined) {
+			query += ` AND title ILIKE $${queryValues.length + 1}`;
+			queryValues.push(`%${title}%`);
+		}
+		if (minSalary !== undefined) {
+			query += ` AND salary >= $${queryValues.length + 1}`;
+			queryValues.push(minSalary);
+		}
+		if (hasEquity === true) {
+			query += ` AND equity > 0`;
+			queryValues.push(hasEquity);
+		}
+		const jobsRes = await db.query(query, queryValues);
+		// error handling
+		if (jobsRes.rows.length === 0) {
+			throw new BadRequestError(`No jobs found`);
+		}
+		if (!jobsRes) throw new NotFoundError(`No jobs found`);
+		if (minSalary > jobsRes.rows.salary) {
+			throw new BadRequestError(`No jobs found meeting minimum salary`);
+		}
+		return jobsRes.rows;
+	}
+
 }
 module.exports = Job;

@@ -48,8 +48,15 @@ router.post("/", ensureAdmin, async function (req, res, next) {
 //  */
 router.get("/", async function (req, res, next) {
 	try {
-		const jobs = await Job.findAll(req.query);
-		return res.json({ jobs });
+		const { title, minSalary, hasEquity } = req.query;
+		const validator = jsonschema.validate(req.query, jobSearchSchema);
+		if (req.query) {
+			const jobs = await Job.filter(req.query);
+			return res.json({ jobs });
+		} else {
+			const jobs = await Job.findAll(req.query);
+			return res.json({ jobs });
+		}
 	} catch (error) {
 		return next(error);
 	}
@@ -112,8 +119,5 @@ router.delete("/:id", ensureAdmin, async function (req, res, next) {
 		return next(error);
 	}
 });
-
-
-
 
 module.exports = router;
